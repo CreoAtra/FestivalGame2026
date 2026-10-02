@@ -1,0 +1,88 @@
+/*
+  style.css
+  担当: UI
+
+  Canvas と操作ボタンの最低限のレイアウトだけ入れてあります。
+  見た目は自由に変えてください。
+*/
+
+* {
+  box-sizing: border-box;
+  /* 長押ししたときにテキスト選択されるのを防ぐ */
+  -webkit-user-select: none;
+  user-select: none;
+  /* タップしたときのハイライトを消す */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #222;
+  font-family: sans-serif;
+  /* スクロールやピンチズームが起きないようにする */
+  touch-action: none;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Canvas は内部解像度 400x700 で作り、画面幅に合わせて縮小表示します */
+#canvas-wrapper {
+  width: 100%;
+  max-width: 400px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#canvas-wrapper canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 操作ボタン(Canvas の外に置いています) */
+#controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 16px;
+}
+
+#move-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.control-btn {
+  width: 72px;
+  height: 72px;
+  border: none;
+  border-radius: 50%;
+  background-color: #555;
+  color: #fff;
+  font-size: 20px;
+  touch-action: none;
+}
+
+.control-btn:active {
+  background-color: #777;
+}
+
+#btn-jump {
+  width: 88px;
+  height: 88px;
+  font-size: 16px;
+}

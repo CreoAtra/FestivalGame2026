@@ -1,0 +1,9 @@
+node_modules/
+
+# OS が勝手に作るファイル
+.DS_Store
+Thumbs.db
+
+# エディタの設定
+.vscode/
+.idea/

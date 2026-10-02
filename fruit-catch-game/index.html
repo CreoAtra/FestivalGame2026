@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>フルーツキャッチゲーム</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- ライブラリ(CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- p5.js が作る Canvas がここに入ります -->
+    <div id="canvas-wrapper"></div>
+
+    <!-- 操作ボタン(UI担当) -->
+    <div id="controls">
+      <div id="move-buttons">
+        <button id="btn-left" class="control-btn">←</button>
+        <button id="btn-right" class="control-btn">→</button>
+      </div>
+      <button id="btn-jump" class="control-btn">JUMP</button>
+    </div>
+  </div>
+
+  <!--
+    各担当のファイル。
+    main.js は他のファイルの関数を呼び出すので、必ず最後に読み込みます。
+    ファイルを追加したときは、ここに <script> タグを足してください。
+  -->
+  <script src="character.js"></script>
+  <script src="fruit.js"></script>
+  <script src="collision.js"></script>
+  <script src="ui.js"></script>
+  <script src="assets.js"></script>
+  <script src="extra.js"></script>
+  <script src="screens.js"></script>
+  <script src="main.js"></script>
+
+</body>
+</html>

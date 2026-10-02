@@ -1,0 +1,10 @@
+{
+  "name": "fruit-catch-game",
+  "version": "1.0.0",
+  "description": "上から降ってくるフルーツをキャラクターでキャッチし、制限時間内にスコアを稼ぐスマホ向けブラウザゲーム",
+  "private": true,
+  "dependencies": {
+    "jquery": "^3.7.1",
+    "p5": "^1.9.0"
+  }
+}
