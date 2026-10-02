@@ -28,11 +28,18 @@
 
 各ファイルの先頭に、何を書けばいいかのメモを入れてあります。
 
+## 公開ページ
+
+https://creoatra.github.io/FestivalGame2026/
+
+`main` ブランチの内容が公開されています。
+
 ## 作業の進め方
 
-1. 自分用のブランチを切る(例: `feature/名前/character`)
-2. 自分の担当ファイルを書く
-3. Pull Request を出す
+1. `develop` ブランチに移動する
+2. 自分用のブランチを切る(例: `feature/名前/character`)
+3. 自分の担当ファイルを書く
+4. Pull Request を出す
 
 ## 気をつけてほしいこと
 
