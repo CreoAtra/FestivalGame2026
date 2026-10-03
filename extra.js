@@ -35,7 +35,7 @@ function vectorAmplify(factor) {
   return (vec) => vec.map((v) => v * factor);
 }
 
-function acclerateMiddleware(
+function accelerateMiddleware(
   { startTime, startFactor },
   controlPoints,
   { endTime, endFactor },
@@ -61,7 +61,7 @@ function acclerateMiddleware(
  */
 const updateExtra = (() => {
   const timer = getAccurateTimer();
-  const amplifiers = acclerateMiddleware(
+  const amplifiers = accelerateMiddleware(
     ACCELERATE_START,
     ACCELERATE,
     ACCELERATE_END,
