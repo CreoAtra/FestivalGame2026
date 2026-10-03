@@ -123,9 +123,7 @@ const updateExtra = (() => {
     ACCELERATE_END,
   )(timer);
   return () => {
-    const currentTime = timer();
-    const factor = amplifiers.next(currentTime).value;
-    return factor;
+    return amplifiers.next().value;
   };
 })();
 
