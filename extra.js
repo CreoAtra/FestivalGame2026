@@ -110,12 +110,7 @@ function accelerateMiddleware(
 // 速度上昇の発動タイミングは、残り10秒からを仮の値としています。
 // 違和感などあれば自由に調整してください。
 
-/**
- * 毎フレーム呼ばれます。
- * - 残り時間が一定以下になったら、プレイヤーの移動速度を上げる
- * - 落下速度も上げるかどうかは、決めてもらって構いません
- */
-const updateExtra = (() => {
+const updateExtraFnBuilder = () => {
   const timer = getAccurateTimer();
   const amplifiers = accelerateMiddleware(
     ACCELERATE_START,
@@ -125,7 +120,23 @@ const updateExtra = (() => {
   return () => {
     return amplifiers.next().value;
   };
-})();
+};
+
+/**
+ * 毎フレーム呼ばれます。
+ * - 残り時間が一定以下になったら、プレイヤーの移動速度を上げる
+ * - 落下速度も上げるかどうかは、決めてもらって構いません
+ */
+let updateExtra = updateExtraFnBuilder();
+
+const decreaseLifeFnBuilder = () => {
+  let life = LIFE_INIT;
+  return () => {
+    life--;
+    if (life < 0) life = 0;
+    if (life === 0) endGame();
+  };
+};
 
 /**
  * ライフを1減らします。ダメージフルーツをキャッチしたときに呼ばれます。
@@ -133,11 +144,9 @@ const updateExtra = (() => {
  *
  * ライフが0になった際は時間切れと同じように、そこまでのスコアで終了という扱いです。
  */
-const decreaseLife = (() => {
-  let life = LIFE_INIT;
-  return () => {
-    life--;
-    if (life < 0) life = 0;
-    if (life === 0) endGame();
-  };
-})();
+let decreaseLife = decreaseLifeFnBuilder();
+
+const resetExtra = () => {
+  updateExtra = updateExtraFnBuilder();
+  decreaseLife = decreaseLifeFnBuilder();
+};
