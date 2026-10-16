@@ -6,19 +6,41 @@
 */
 
 // ランキングは localStorage に保存します。
+const SCREEN_STORAGE_KEY = "fruitCatchScores";
+const SCREEN_RANKING_MAX = 5;   // ランキングに残す件数
+
+
+/**
+ * 画面を1つだけ表示します。
+ * @param {string|null} id 表示する画面のID。null を渡すと全部隠します(ゲーム画面)
+ */
+function screenShow(id) {
+  $(".screen").removeClass("is-active");
+  if (id) $(id).addClass("is-active");
+}
 
 /**
  * タイトル画面を表示します。
  */
 function showTitle() {
-  // TODO
+  $("#screen-title-best").text(loadScores()[0] || 0);
+  screenShow("#screen-title");
 }
 
 /**
  * 結果画面を表示します。ゲームが終了しときに呼ばれます。
  */
 function showResult() {
-  // TODO
+  const score = gameState.score;
+  const isBest = score > (loadScores()[0] || 0);   // 保存する前に比べます
+  saveScore(score);
+
+  $("#screen-result-score").text(score);
+  $("#screen-result-best").toggleClass("is-hidden", !isBest);
+  $("#screen-result-ranking").html(
+    loadScores().map((s) => `<li>${s}</li>`).join("")
+  );
+  screenShow("#screen-result");
 }
 
 /**
@@ -27,7 +49,13 @@ function showResult() {
  * @param {number} score 今回のスコア
  */
 function saveScore(score) {
-  // TODO
+  const scores = loadScores();
+  scores.push(score);
+  scores.sort((a, b) => b - a);
+  localStorage.setItem(
+    SCREEN_STORAGE_KEY,
+    JSON.stringify(scores.slice(0, SCREEN_RANKING_MAX))
+  );
 }
 
 /**
@@ -35,6 +63,18 @@ function saveScore(score) {
  * @return {Array<number>} 高い順に並んだスコアの配列
  */
 function loadScores() {
-  // TODO
-  return [];
+  return JSON.parse(localStorage.getItem(SCREEN_STORAGE_KEY) || "[]");
 }
+
+
+// ===== ボタンの操作 =====
+
+$(function () {
+  // スタートとリトライは、どちらもゲームを最初から始めます
+  $("#screen-btn-start, #screen-btn-retry").on("click", function () {
+    screenShow(null);
+    resetGame();   // main.js
+  });
+
+  $("#screen-btn-title").on("click", showTitle);
+});
