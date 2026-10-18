@@ -104,14 +104,170 @@
  * - player.x が 0 〜 CANVAS_WIDTH - player.width の中に収まるようにする
  * - 足元(player.y + player.height)が GROUND_Y より下に行かないようにする
  */
+
+/*
+  character.js
+  担当: キャラクター操作
+
+  キャラクターの左右移動とジャンプを担当します。
+
+  player は、ここだけが書き換えます。
+  fruits と gameState は読むだけにしてください。
+*/
+
+// ============================================================
+// キャラクターの設定
+// ============================================================
+
+// 移動速度（発展機能担当が変更可能）
+let playerSpeed = 5;
+
+// ジャンプの強さ
+let playerJumpPower = 12;
+
+// 重力
+let playerGravity = 0.6;
+
+// ボタンの入力状態
+let playerIsPressingLeft = false;
+let playerIsPressingRight = false;
+let playerIsPressingJump = false;
+
+// ジャンプボタンの前フレームの状態
+let playerJumpWasPressed = false;
+
+
+
 function updatePlayer() {
-  // TODO
+
+  // ゲーム終了State
+  if (gameState.isFinished) {
+    return;
+  }
+
+
+  // スマホのボタン操作とPCのキーボード操作
+  const leftPressed =
+    playerIsPressingLeft ||
+    (typeof keyIsDown === "function" &&
+      (keyIsDown(37) || keyIsDown(65)));
+
+  const rightPressed =
+    playerIsPressingRight ||
+    (typeof keyIsDown === "function" &&
+      (keyIsDown(39) || keyIsDown(68)));
+
+  const jumpPressed =
+    playerIsPressingJump ||
+    (typeof keyIsDown === "function" &&
+      (keyIsDown(32) || keyIsDown(38) || keyIsDown(87)));
+
+
+  
+  // 左右同時押しの場合は停止
+  if (leftPressed && !rightPressed) {
+    player.x -= playerSpeed;
+  }
+
+  if (rightPressed && !leftPressed) {
+    player.x += playerSpeed;
+  }
+
+
+  //Map Boundaries:
+  // Left Boundary
+  if (player.x < 0) {
+    player.x = 0;
+  }
+
+  // Right Boundary
+  if (player.x + player.width > CANVAS_WIDTH) {
+    player.x = CANVAS_WIDTH - player.width;
+  }
+
+
+ //地面の確認
+
+  const playerOnGround =
+    player.y + player.height >= GROUND_Y &&
+    player.velocityY >= 0;
+
+
+
+  //ジャンプ
+
+  if (
+    playerOnGround &&
+    jumpPressed &&
+    !playerJumpWasPressed
+  ) {
+    // 上向きの速度を設定
+    player.velocityY = -playerJumpPower;
+  }
+
+  playerJumpWasPressed = jumpPressed;
+
+
+  //重力
+  player.velocityY += playerGravity;
+
+  // Y座標を更新
+  player.y += player.velocityY;
+
+
+  // 7. 地面との判定
+
+  // 足元と地面の判定
+  if (player.y + player.height >= GROUND_Y) {
+
+    // 地面の上に戻す
+    player.y = GROUND_Y - player.height;
+
+    // 落下速度をリセット
+    player.velocityY = 0;
+  }
 }
 
+
+//キャラ
+
+
 /**
- * 毎フレーム呼ばれます。キャラクターを描画してください。
- * 位置の計算はここではなく updatePlayer() で行ってください。
+ * 毎フレーム呼ばれます。
+ * キャラクターを描画してください。
+ * 位置の計算は updatePlayer() で行います。
  */
+
+console.log("drawPlayer called", player.x, player.y);
 function drawPlayer() {
-  // TODO
+  // 画像を一度だけ読み込む
+  if (!drawPlayer.playerImage) {
+
+    drawPlayer.playerImage = new Image();
+
+    drawPlayer.playerImage.onload = function() {
+      console.log("player.png loaded successfully!");
+    };
+
+    drawPlayer.playerImage.onerror = function() {
+      console.error("Failed to load player.png");
+    };
+
+    drawPlayer.playerImage.src = "assets/player.png";
+  }
+
+  const img = drawPlayer.playerImage;
+
+  // 画像の読み込みが完了していれば描画
+  if (img.complete && img.naturalWidth > 0) {
+
+    drawingContext.drawImage(
+      img,
+      player.x,
+      player.y,
+      player.width,
+      player.height
+    );
+
+  }
 }
