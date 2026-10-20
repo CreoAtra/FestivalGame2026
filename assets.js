@@ -46,13 +46,13 @@ function preload() {
   }
 }
 
-// 演出制御用変数
+// 演出制御用
 let effectActiveList = [];
 let effectPlayerColor = null;
 
-// ゲームオーバー演出用変数
+// ゲームオーバー用
 let effectGameOverActive = false;
-let effectGameOverType = "timeup";
+
 
 // SE再生用
 function assetPlaySound(name) {
@@ -117,7 +117,6 @@ function playEffect(type) {
   else if (type === "gameover" || type === "gameover_damage") {
     effectGameOverActive = true;
     assetPlaySound("gameover");
-    effectGameOverType = (type === "gameover_damage") ? "damage" : "timeup";
   }
 }
 //パーティクルデザイン
@@ -204,5 +203,4 @@ function resetEffects() {
   effectActiveList = [];
   effectPlayerColor = null;
   effectGameOverActive = false;
-  effectGameOverType = "timeup";
 }
