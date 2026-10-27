@@ -159,8 +159,8 @@ function playerClearButtonInput() {
 
 /** スタート時・リトライ時に位置と入力を最初の状態に戻します。 */
 function resetPlayer() {
-  player.x = (CANVAS_WIDTH - player.width) / 2;
-  player.y = GROUND_Y - player.height;
+  player.x = 175;
+  player.y = 580;
   player.velocityY = 0;
   playerClearButtonInput();
   playerJumpWasPressed = false;
@@ -253,6 +253,13 @@ function playerPreviewFrame(time) {
   while (playerPreviewElapsed >= 1000 / 60) {
     updatePlayer(true);
     playerPreviewElapsed -= 1000 / 60;
+  }
+
+  // 他担当の未実装処理で main.js の draw() が止まっても、
+  // 開始前の操作確認ではキャラクターを描き直します。
+  if (typeof background === "function" && typeof image === "function") {
+    background(135, 206, 235);
+    drawPlayer();
   }
 }
 
