@@ -138,32 +138,151 @@ let playerJumpWasPressed = false;
 
 
 
-function updatePlayer() {
+// ボタンごとに指を管理し、移動とジャンプの同時押しにも対応します。
+const playerButtonPointers = [];
+const playerKeyboardKeys = new Set();
+// 次のフレームまでに離した短いクリックも、一度は更新へ渡します。
+const playerPendingActions = new Set();
+const playerControlCodes = new Set([
+  "ArrowLeft", "KeyA", "ArrowRight", "KeyD",
+  "Space", "ArrowUp", "KeyW"
+]);
+
+function playerClearButtonInput() {
+  playerButtonPointers.forEach((pointers) => pointers.clear());
+  playerKeyboardKeys.clear();
+  playerPendingActions.clear();
+  playerIsPressingLeft = false;
+  playerIsPressingRight = false;
+  playerIsPressingJump = false;
+}
+
+/** スタート時・リトライ時に位置と入力を最初の状態に戻します。 */
+function resetPlayer() {
+  player.x = (CANVAS_WIDTH - player.width) / 2;
+  player.y = GROUND_Y - player.height;
+  player.velocityY = 0;
+  playerClearButtonInput();
+  playerJumpWasPressed = false;
+}
+
+function playerSetupButtons() {
+  const buttons = [
+    ["btn-left", (pressed) => { playerIsPressingLeft = pressed; }, "left"],
+    ["btn-right", (pressed) => { playerIsPressingRight = pressed; }, "right"],
+    ["btn-jump", (pressed) => { playerIsPressingJump = pressed; }, "jump"]
+  ];
+
+  buttons.forEach(([id, setPressed, action]) => {
+    const button = document.getElementById(id);
+    if (!button) return;
+    const pointers = new Set();
+    playerButtonPointers.push(pointers);
+
+    button.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      pointers.add(event.pointerId);
+      setPressed(true);
+      playerPendingActions.add(action);
+    });
+
+    const release = (event) => {
+      pointers.delete(event.pointerId);
+      setPressed(pointers.size > 0);
+    };
+    // ボタンの外で離した場合や、タッチが中断された場合も解除します。
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
+    button.addEventListener("contextmenu", (event) => event.preventDefault());
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (!playerControlCodes.has(event.code)) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    // 入力欄で文字を入力しているときは操作しません。
+    if (event.target instanceof Element &&
+        event.target.closest("input, textarea, select, [contenteditable]")) return;
+    event.preventDefault();
+    if (!playerKeyboardKeys.has(event.code)) {
+      const action = event.code === "ArrowLeft" || event.code === "KeyA" ? "left" :
+        event.code === "ArrowRight" || event.code === "KeyD" ? "right" : "jump";
+      playerPendingActions.add(action);
+    }
+    playerKeyboardKeys.add(event.code);
+  });
+  window.addEventListener("keyup", (event) => {
+    if (playerKeyboardKeys.delete(event.code)) event.preventDefault();
+  });
+  window.addEventListener("blur", playerClearButtonInput);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) playerClearButtonInput();
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", playerSetupButtons, { once: true });
+} else {
+  playerSetupButtons();
+}
+
+// スタート処理の結合前でも、index.html でキャラクターの操作を確認できます。
+// 通常のゲームが一度始まったあとは、プレビューでは動かしません。
+let playerGameHasStarted = false;
+let playerPreviewLastTime = null;
+let playerPreviewElapsed = 0;
+
+function playerPreviewFrame(time) {
+  window.requestAnimationFrame(playerPreviewFrame);
+  if (typeof gameState === "undefined") return;
+  if (!gameState.isFinished) playerGameHasStarted = true;
+  const preview = !playerGameHasStarted && gameState.isFinished &&
+    document.querySelector("#canvas-wrapper canvas");
+  if (!preview) {
+    playerPreviewLastTime = null;
+    playerPreviewElapsed = 0;
+    return;
+  }
+
+  if (playerPreviewLastTime === null) playerPreviewLastTime = time;
+  playerPreviewElapsed += Math.min(time - playerPreviewLastTime, 100);
+  playerPreviewLastTime = time;
+  // ディスプレイのリフレッシュレートによらず、通常と同じ60回/秒で更新します。
+  while (playerPreviewElapsed >= 1000 / 60) {
+    updatePlayer(true);
+    playerPreviewElapsed -= 1000 / 60;
+  }
+}
+
+window.requestAnimationFrame(playerPreviewFrame);
+
+function updatePlayer(playerPreview = false) {
+  if (!gameState.isFinished) playerGameHasStarted = true;
 
   // ゲーム終了State
-  if (gameState.isFinished) {
+  if (gameState.isFinished && !playerPreview) {
     return;
   }
 
 
   // スマホのボタン操作とPCのキーボード操作
   const leftPressed =
-    playerIsPressingLeft ||
-    (typeof keyIsDown === "function" &&
-      (keyIsDown(37) || keyIsDown(65)));
+    playerIsPressingLeft || playerPendingActions.has("left") ||
+    playerKeyboardKeys.has("ArrowLeft") || playerKeyboardKeys.has("KeyA");
 
   const rightPressed =
-    playerIsPressingRight ||
-    (typeof keyIsDown === "function" &&
-      (keyIsDown(39) || keyIsDown(68)));
+    playerIsPressingRight || playerPendingActions.has("right") ||
+    playerKeyboardKeys.has("ArrowRight") || playerKeyboardKeys.has("KeyD");
 
   const jumpPressed =
-    playerIsPressingJump ||
-    (typeof keyIsDown === "function" &&
-      (keyIsDown(32) || keyIsDown(38) || keyIsDown(87)));
+    playerIsPressingJump || playerPendingActions.has("jump") ||
+    playerKeyboardKeys.has("Space") || playerKeyboardKeys.has("ArrowUp") ||
+    playerKeyboardKeys.has("KeyW");
 
 
-  
+
   // 左右同時押しの場合は停止
   if (leftPressed && !rightPressed) {
     player.x -= playerSpeed;
@@ -199,13 +318,14 @@ function updatePlayer() {
   if (
     playerOnGround &&
     jumpPressed &&
-    !playerJumpWasPressed
+    (!playerJumpWasPressed || playerPendingActions.has("jump"))
   ) {
     // 上向きの速度を設定
     player.velocityY = -playerJumpPower;
   }
 
   playerJumpWasPressed = jumpPressed;
+  playerPendingActions.clear();
 
 
   //重力
@@ -238,36 +358,27 @@ function updatePlayer() {
  * 位置の計算は updatePlayer() で行います。
  */
 
-console.log("drawPlayer called", player.x, player.y);
 function drawPlayer() {
-  // 画像を一度だけ読み込む
-  if (!drawPlayer.playerImage) {
-
-    drawPlayer.playerImage = new Image();
-
-    drawPlayer.playerImage.onload = function() {
-      console.log("player.png loaded successfully!");
-    };
-
-    drawPlayer.playerImage.onerror = function() {
-      console.error("Failed to load player.png");
-    };
-
-    drawPlayer.playerImage.src = "assets/player.png";
-  }
-
-  const img = drawPlayer.playerImage;
-
-  // 画像の読み込みが完了していれば描画
-  if (img.complete && img.naturalWidth > 0) {
-
-    drawingContext.drawImage(
-      img,
-      player.x,
-      player.y,
-      player.width,
-      player.height
+  // 初回だけ player.png を読み込み、以後は同じ画像を使います。
+  if (!drawPlayer.playerImageRequested) {
+    drawPlayer.playerImageRequested = true;
+    loadImage(
+      "assets/player.png",
+      (img) => {
+        drawPlayer.playerImage = img;
+        drawPlayer();
+      },
+      () => { console.error("assets/player.png を読み込めませんでした。"); }
     );
-
   }
+
+  if (!drawPlayer.playerImage) return;
+
+  image(
+    drawPlayer.playerImage,
+    player.x,
+    player.y,
+    player.width,
+    player.height
+  );
 }
