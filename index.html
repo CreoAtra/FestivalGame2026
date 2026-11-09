@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#28745b">
   <title>フルーツキャッチゲーム</title>
 
   <link rel="stylesheet" href="style.css">
@@ -13,19 +14,118 @@
 </head>
 <body>
 
-  <div id="game-container">
+  <main id="game-container" aria-label="フルーツキャッチゲーム">
+    <header class="game-header">
+      <h1 class="game-title">
+        <img src="assets/apple.png" width="32" height="32" alt="">
+        フルーツキャッチゲーム
+      </h1>
+    </header>
+
+    <!-- gameState の値を ui.js の updateUI() で表示します。 -->
+    <div id="game-hud" role="group" aria-label="ゲーム状況">
+      <div class="hud-stat hud-score">
+        <span id="score-label" class="hud-label">スコア</span>
+        <div class="hud-value">
+          <span id="score" aria-labelledby="score-label">0</span>
+          <span class="hud-unit">点</span>
+        </div>
+      </div>
+      <div id="time-stat" class="hud-stat hud-time">
+        <span id="time-label" class="hud-label">
+          <img src="assets/clock.png" width="18" height="18" alt="">
+          のこり時間
+        </span>
+        <div class="hud-value">
+          <span id="time-left" role="timer" aria-labelledby="time-label">60</span>
+          <span class="hud-unit">秒</span>
+        </div>
+      </div>
+      <div class="hud-stat hud-life">
+        <span id="life-label" class="hud-label">ライフ</span>
+        <div class="hud-value">
+          <span id="life" class="life-hearts" role="img" aria-label="残りライフ3">
+            <svg class="life-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 21 2 11V5h3V2h5v3h4V2h5v3h3v6Z" fill="currentColor"/>
+            </svg>
+            <svg class="life-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 21 2 11V5h3V2h5v3h4V2h5v3h3v6Z" fill="currentColor"/>
+            </svg>
+            <svg class="life-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 21 2 11V5h3V2h5v3h4V2h5v3h3v6Z" fill="currentColor"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- p5.js が作る Canvas がここに入ります -->
     <div id="canvas-wrapper"></div>
 
     <!-- 操作ボタン(UI担当) -->
-    <div id="controls">
-      <div id="move-buttons">
-        <button id="btn-left" class="control-btn">←</button>
-        <button id="btn-right" class="control-btn">→</button>
+    <div id="controls" role="group" aria-label="ゲーム操作" aria-describedby="controls-hint">
+      <div class="move-control">
+        <div id="move-buttons">
+          <button id="btn-left" class="control-btn" type="button" aria-label="左へ移動">
+            <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path d="M17 6 6 16l11 10v-7h10v-6H17Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button id="btn-right" class="control-btn" type="button" aria-label="右へ移動">
+            <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path d="m15 6 11 10-11 10v-7H5v-6h10Z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      <button id="btn-jump" class="control-btn">JUMP</button>
+      <button id="btn-jump" class="control-btn" type="button" aria-label="ジャンプ">
+        <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <path d="M6 15 16 5l10 10h-7v12h-6V15Z" fill="currentColor"/>
+        </svg>
+        <span>JUMP</span>
+      </button>
     </div>
-  </div>
+  </main>
+
+  <!--
+    結果画面の見た目(UI担当)。通常は非表示です。
+    画面担当が showResult() から #result-score / #result-best-score を更新し、
+    document.getElementById("result-screen").showModal() で表示してください。
+    「もう一度あそぶ」のリトライ処理はロジック担当が接続してください。
+    UI側はボタンを押したときのアニメーションのみ実装しています。
+  -->
+  <dialog id="result-screen" class="result-screen" aria-labelledby="result-title">
+    <header class="result-header">
+      <div class="result-fruits" aria-hidden="true">
+        <img src="assets/banana.png" width="32" height="32" alt="">
+        <img src="assets/apple.png" width="44" height="44" alt="">
+        <img src="assets/grape.png" width="32" height="32" alt="">
+      </div>
+      <h2 id="result-title">ゲーム終了！</h2>
+    </header>
+
+    <div class="result-score-ticket">
+      <p id="result-score-label">今回のスコア</p>
+      <div class="result-score-value">
+        <span id="result-score" aria-labelledby="result-score-label">0</span>
+        <span class="result-score-unit">点</span>
+      </div>
+      <!-- 自己ベスト更新時にロジック担当が hidden を外してください。 -->
+      <p id="result-new-best" class="result-new-best" hidden>自己ベスト更新！</p>
+    </div>
+
+    <div class="result-best">
+      <span id="result-best-label">自己ベスト</span>
+      <span>
+        <strong id="result-best-score" aria-labelledby="result-best-label">—</strong>
+        <span class="result-score-unit">点</span>
+      </span>
+    </div>
+
+    <div class="result-actions">
+      <button id="btn-retry" class="result-button result-retry" type="button">もう一度あそぶ</button>
+    </div>
+  </dialog>
 
   <!--
     各担当のファイル。
