@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "jquery": "^3.7.1",
-    "p5": "^1.9.0"
+    "p5": "^1.9.0",
+    "p5.sound": "^1.9.0"
   }
 }
