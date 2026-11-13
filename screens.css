@@ -1,0 +1,78 @@
+/*
+  screens.css
+  担当: タイトル・結果・ランキング
+
+  タイトル画面と結果画面の見た目です。
+  ゲーム中の表示や操作ボタンは style.css(UI担当)の方にあります。
+*/
+
+/* 画面全体にかぶせるオーバーレイ。is-active が付いている画面だけ表示されます */
+.screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  text-align: center;
+}
+
+.screen.is-active {
+  display: flex;
+}
+
+.screen h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.screen h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.screen p {
+  margin: 0;
+  font-size: 18px;
+}
+
+.screen-btn {
+  min-width: 160px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  background-color: #e8653c;
+  color: #fff;
+  font-size: 18px;
+}
+
+.screen-btn:active {
+  background-color: #c74f2a;
+}
+
+.screen-help {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* 表示を消すための印。jQuery から付け外しします */
+.is-hidden {
+  display: none;
+}
+
+#screen-result-best {
+  color: #ffd24a;
+  font-weight: bold;
+}
+
+#screen-result-ranking {
+  margin: 0;
+  padding-left: 28px;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.6;
+}
