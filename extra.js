@@ -130,11 +130,10 @@ const updateExtraFnBuilder = () => {
 let updateExtra = updateExtraFnBuilder();
 
 const decreaseLifeFnBuilder = () => {
-  let life = LIFE_INIT;
   return () => {
-    life--;
-    if (life < 0) life = 0;
-    if (life === 0) endGame();
+    gameState.life--;
+    if (gameState.life < 0) gameState.life = 0;
+    if (gameState.life === 0) endGame();
   };
 };
 

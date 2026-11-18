@@ -119,8 +119,15 @@
  * @return {Array} キャッチしたフルーツの配列。何もなければ空の配列
  */
 function checkCollisions() {
-  // TODO
-  return [];
+  const caughtFruits = [];
+  for(let i = fruits.length - 1; i >= 0; i--){
+    if (isOverlapping(player, fruits[i])){
+      caughtFruits.push(fruits[i]);
+      fruits.splice(i, 1);
+    }
+  }
+
+  return caughtFruits;
 }
 
 /**
@@ -129,6 +136,5 @@ function checkCollisions() {
  * x, y は左上の角を指します。
  */
 function isOverlapping(a, b) {
-  // TODO
-  return false;
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
