@@ -68,7 +68,7 @@ function draw() {
   if (!gameState.isFinished) {
     updatePlayer();                          // character.js
     updateFruits();                          // fruit.js
-    updateExtra();                           // extra.js
+    // updateExtra();                        // extra.js(一時的に停止)
     applyCaughtFruits(checkCollisions());    // collision.js
     updateTimer();
   }
@@ -102,12 +102,12 @@ function applyCaughtFruits(caught) {
 
     case "bonus":
       gameState.score += SCORE_BONUS;
-      playEffect("catch");
+      playEffect("bonus");
       break;
     
     case "clock":
       gameState.timeLeft = Math.min(gameState.timeLeft + SEC_ADD, TIME_MAX);
-      playEffect("catch");
+      playEffect("clock");
       break;
     
     case "damage":
