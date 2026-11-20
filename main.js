@@ -68,7 +68,7 @@ function draw() {
   if (!gameState.isFinished) {
     updatePlayer();                          // character.js
     updateFruits();                          // fruit.js
-    // updateExtra();                        // extra.js(一時的に停止)
+    updateExtra();                           // extra.js
     applyCaughtFruits(checkCollisions());    // collision.js
     updateTimer();
   }
