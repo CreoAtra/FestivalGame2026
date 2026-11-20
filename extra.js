@@ -6,33 +6,38 @@
   なるべく他の担当のファイルは書き換えず、必要があればDiscordの方に連絡して下さい。
 */
 
-const ACCELERATE_START = Object.freeze({
+// 速度上昇の発動タイミングは、残り10秒からを仮の値としています。
+// 違和感などあれば自由に調整してください。
+const EXTRA_BOOST_DURATION = 10_000; // 残り何ミリ秒から加速を始めるか
+
+// 加速開始からの経過時間 (ミリ秒) と速度倍率の対応です。
+// 制御点は加速区間に対する割合で置いているので、EXTRA_BOOST_DURATION を変えても曲線の形は変わりません。
+const EXTRA_ACCELERATE_START = Object.freeze({
   startTime: 0,
   startFactor: 1.0,
 });
 
-const ACCELERATE = Object.freeze([
-  { time: 60_000, factor: 1.3333 },
-  { time: 70_000, factor: 1.5 },
-  { time: 80_000, factor: 1.75 },
+const EXTRA_ACCELERATE = Object.freeze([
+  { time: EXTRA_BOOST_DURATION * (6 / 9), factor: 1.3333 },
+  { time: EXTRA_BOOST_DURATION * (7 / 9), factor: 1.5 },
+  { time: EXTRA_BOOST_DURATION * (8 / 9), factor: 1.75 },
 ]);
 
-const ACCELERATE_END = Object.freeze({
-  endTime: 90_000,
+const EXTRA_ACCELERATE_END = Object.freeze({
+  endTime: EXTRA_BOOST_DURATION,
   endFactor: 2.0,
 });
 
-function getAccurateTimer() {
-  const startTime = performance.now();
-  let currentTime = startTime;
-  return () => {
-    currentTime = performance.now();
-    return currentTime - startTime;
-  };
-}
+// 加速前の移動速度。character.js は extra.js より先に読み込まれるので、ここで読めます。
+const extraBaseSpeed = playerSpeed;
 
-function vectorAmplify(factor) {
-  return (vec) => vec.map((v) => v * factor);
+/**
+ * 加速開始からの経過時間 (ミリ秒) を、ゲームの残り時間から求めます。
+ * 時計フルーツで残り時間が増えると値も戻るので、速度も元に戻ります。
+ */
+function extraBoostTimer() {
+  const remaining = (gameState.timeLeft - gameFrameCount / FPS) * 1000;
+  return EXTRA_BOOST_DURATION - remaining;
 }
 
 /**
@@ -41,7 +46,7 @@ function vectorAmplify(factor) {
  *   制御点の間で値が行き過ぎる (オーバーシュートする) こともありません。
  * - 始点・終点の接線は 0 にしているので、範囲外の一定区間とも C^1 でつながります。
  */
-function accelerateMiddleware(
+function extraAccelerateMiddleware(
   { startTime, startFactor },
   controlPoints,
   { endTime, endFactor },
@@ -56,7 +61,7 @@ function accelerateMiddleware(
   for (let i = 1; i < n; i++) {
     if (!(times[i] > times[i - 1])) {
       throw new RangeError(
-        "accelerateMiddleware: times must be strictly increasing",
+        "extraAccelerateMiddleware: times must be strictly increasing",
       );
     }
   }
@@ -98,27 +103,20 @@ function accelerateMiddleware(
   };
 
   return function* (timer) {
-    let currentTime;
     while (true) {
-      currentTime = timer();
-      if (currentTime >= endTime) break;
-      yield vectorAmplify(factorAt(currentTime));
+      yield factorAt(timer());
     }
   };
 }
 
-// 速度上昇の発動タイミングは、残り10秒からを仮の値としています。
-// 違和感などあれば自由に調整してください。
-
-const updateExtraFnBuilder = () => {
-  const timer = getAccurateTimer();
-  const amplifiers = accelerateMiddleware(
-    ACCELERATE_START,
-    ACCELERATE,
-    ACCELERATE_END,
-  )(timer);
+const extraUpdateFnBuilder = () => {
+  const factors = extraAccelerateMiddleware(
+    EXTRA_ACCELERATE_START,
+    EXTRA_ACCELERATE,
+    EXTRA_ACCELERATE_END,
+  )(extraBoostTimer);
   return () => {
-    return amplifiers.next().value;
+    playerSpeed = extraBaseSpeed * factors.next().value;
   };
 };
 
@@ -127,9 +125,9 @@ const updateExtraFnBuilder = () => {
  * - 残り時間が一定以下になったら、プレイヤーの移動速度を上げる
  * - 落下速度も上げるかどうかは、決めてもらって構いません
  */
-let updateExtra = updateExtraFnBuilder();
+let updateExtra = extraUpdateFnBuilder();
 
-const decreaseLifeFnBuilder = () => {
+const extraDecreaseLifeFnBuilder = () => {
   return () => {
     gameState.life--;
     if (gameState.life < 0) gameState.life = 0;
@@ -143,9 +141,10 @@ const decreaseLifeFnBuilder = () => {
  *
  * ライフが0になった際は時間切れと同じように、そこまでのスコアで終了という扱いです。
  */
-let decreaseLife = decreaseLifeFnBuilder();
+let decreaseLife = extraDecreaseLifeFnBuilder();
 
 const resetExtra = () => {
-  updateExtra = updateExtraFnBuilder();
-  decreaseLife = decreaseLifeFnBuilder();
+  updateExtra = extraUpdateFnBuilder();
+  decreaseLife = extraDecreaseLifeFnBuilder();
+  playerSpeed = extraBaseSpeed;
 };
